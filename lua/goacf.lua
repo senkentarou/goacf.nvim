@@ -27,7 +27,7 @@ local function goacf()
     return
   end
 
-  local file_names = run('git status --porcelain | grep -wv D | cut -b4-')
+  local file_names = run('git status -uall --porcelain | grep -wv D | cut -b4-')
 
   if #file_names <= 0 then
     print('fatal: no changed files on .git repository.')
