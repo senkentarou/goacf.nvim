@@ -34,8 +34,8 @@ local function goacf()
     return
   end
 
-  -- close all buffer
-  vim.api.nvim_command('bufdo bwipeout')
+  -- close all buffer once
+  vim.api.nvim_command('bufdo bdelete')
   -- open git changed files
   vim.api.nvim_command('args ' .. file_names)
 end
