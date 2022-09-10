@@ -3,41 +3,54 @@ local vim = vim
 local function run(command)
   -- get command line output as space concat
   local handle = io.popen(command)
-  local result = handle:read("*a")
-  local status = handle:close()
+  local text = handle:read("*a")
+  handle:close()
 
-  return string.gsub(result, '\n', ' ')
+  result = {}
+  for match in string.gmatch(text, "(.-)\n") do
+    table.insert(result, match)
+  end
+
+  return result
 end
 
-function exists(path)
-   local f = io.open(path, "r")
+local function exists(path)
+  local f = io.open(path, "r")
+  io.close(f)
 
-   if f ~= nil then
-    io.close(f)
-    return true
-  else
-    return false
-  end
+  return f ~= nil
 end
 
 local function goacf()
   -- check .git repository
   if not exists('.git') then
-    print('fatal: .git repository does not exist.')
-    return
+    error('fatal: .git repository does not exist.')
   end
 
   local file_names = run('git status -uall --porcelain | grep -wv D | cut -b4-')
 
   if #file_names <= 0 then
-    print('fatal: no changed files on .git repository.')
-    return
+    error('fatal: no changed files on .git repository.')
   end
 
-  -- close all buffer once
-  vim.api.nvim_command('bufdo bdelete')
+  local name_set = {}
+  for _, l in ipairs(file_names) do name_set[l] = true end
+
+  for i = 1, vim.fn.bufnr('$') do
+    local buf_name = vim.fn.bufname(i)
+    if buf_name ~= '' then
+      local relative_buf_file_name = vim.fn.fnamemodify(buf_name, ":~:.")
+
+      -- close file if no git diff
+      if name_set[relative_buf_file_name] == false then
+        vim.api.nvim_command('bdelete ' .. relative_buf_file_name)
+      end
+    end
+  end
+
   -- open git changed files
-  vim.api.nvim_command('args ' .. file_names)
+  vim.api.nvim_command('args ' .. table.concat(file_names, ' '))
+  print('opened: ' .. #file_names .. ' file(s)')
 end
 
 return {
