@@ -42,7 +42,7 @@ local function goacf()
       local relative_buf_file_name = vim.fn.fnamemodify(buf_name, ":~:.")
 
       -- close file if no git diff
-      if name_set[relative_buf_file_name] == false then
+      if name_set[relative_buf_file_name] ~= true then
         vim.api.nvim_command('bdelete ' .. relative_buf_file_name)
       end
     end
