@@ -38,7 +38,9 @@ local function goacf()
 
   for i = 1, vim.fn.bufnr('$') do
     local buf_name = vim.fn.bufname(i)
-    if buf_name ~= '' then
+    local buf_listed = vim.fn.buflisted(i)
+
+    if buf_listed == 1 and buf_name ~= '' then
       local relative_buf_file_name = vim.fn.fnamemodify(buf_name, ":~:.")
 
       -- close file if no git diff
