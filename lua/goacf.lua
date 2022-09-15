@@ -27,6 +27,15 @@ local function goacf()
     error('fatal: .git repository does not exist.')
   end
 
+  -- save editing file before getting git status
+  for i = 1, vim.fn.bufnr('$') do
+    local buf_info = vim.fn.getbufinfo(i)
+
+    if #buf_info > 0 and buf_info[1].changed == 1 then
+      vim.api.nvim_command('write')
+    end
+  end
+
   local file_names = run('git status -uall --porcelain | grep -wv D | cut -b4-')
 
   if #file_names <= 0 then
