@@ -2,13 +2,16 @@ local vim = vim
 
 local function run(command)
   -- get command line output as space concat
+  local result = {}
   local handle = io.popen(command)
-  local text = handle:read("*a")
-  handle:close()
 
-  result = {}
-  for match in string.gmatch(text, "(.-)\n") do
-    table.insert(result, match)
+  if handle then
+    local text = handle:read("*a")
+    handle:close()
+
+    for match in string.gmatch(text, "(.-)\n") do
+      table.insert(result, match)
+    end
   end
 
   return result
@@ -24,7 +27,8 @@ end
 local function goacf()
   -- check .git repository
   if not exists('.git') then
-    error('fatal: .git repository does not exist.')
+    vim.notify('fatal: .git repository does not exist.', vim.log.levels.ERROR)
+    return
   end
 
   -- save editing file before getting git status
@@ -39,11 +43,14 @@ local function goacf()
   local file_names = run('git status -uall --porcelain | grep -wv D | cut -b4-')
 
   if #file_names <= 0 then
-    error('fatal: no changed files on .git repository.')
+    vim.notify('fatal: no changed files on .git repository.', vim.log.levels.ERROR)
+    return
   end
 
   local name_set = {}
-  for _, l in ipairs(file_names) do name_set[l] = true end
+  for _, l in ipairs(file_names) do
+    name_set[l] = true
+  end
 
   for i = 1, vim.fn.bufnr('$') do
     local buf_name = vim.fn.bufname(i)
@@ -61,9 +68,9 @@ local function goacf()
 
   -- open git changed files
   vim.api.nvim_command('args ' .. table.concat(file_names, ' '))
-  print('opened: ' .. #file_names .. ' file(s)')
+  vim.notify('opened: ' .. #file_names .. ' file(s)')
 end
 
 return {
-  goacf = goacf
+  goacf = goacf,
 }
