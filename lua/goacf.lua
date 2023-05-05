@@ -19,9 +19,13 @@ end
 
 local function exists(path)
   local f = io.open(path, "r")
-  io.close(f)
 
-  return f ~= nil
+  if f ~= nil then
+    io.close(f)
+    return true
+  end
+
+  return false
 end
 
 local function goacf()
