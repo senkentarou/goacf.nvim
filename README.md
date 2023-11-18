@@ -6,6 +6,10 @@
 
 ## Usage
 * Please execute `:Goacf` command on .git repository, then open all changed files.
+* Or set keymap as below,
+```
+nnoremap <silent> <C-g><C-o> :<C-u>Goacf<CR>
+```
 
 ## For development
 * Load under development plugin files on root repository.
