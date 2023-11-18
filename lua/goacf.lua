@@ -17,14 +17,7 @@ local function run(command)
   return result
 end
 
-local function goacf()
-  -- check .git repository
-  if vim.fn.empty(vim.fn.glob('.git')) == 1 then
-    vim.notify('fatal: .git does not exist on current directory.', vim.log.levels.ERROR)
-    return
-  end
-
-  -- save editing file before getting git status
+local function save_buffers()
   for i = 1, vim.fn.bufnr('$') do
     local buf_info = vim.fn.getbufinfo(i)
 
@@ -32,15 +25,13 @@ local function goacf()
       vim.api.nvim_command('write')
     end
   end
+end
 
-  local file_names = run('git status -uall --porcelain | grep -wv D | cut -b4-')
-  if #file_names <= 0 then
-    vim.notify('fatal: no changed files on .git repository.', vim.log.levels.ERROR)
-    return
-  end
+local function close_buffers(args)
+  local ignore_files = args.ignore_files or {}
 
   local name_set = {}
-  for _, l in ipairs(file_names) do
+  for _, l in ipairs(ignore_files) do
     name_set[l] = true
   end
 
@@ -57,10 +48,36 @@ local function goacf()
       end
     end
   end
+end
+
+--
+-- Git open blob file
+--
+local function goacf()
+  -- check .git repository
+  if vim.fn.empty(vim.fn.glob('.git')) == 1 then
+    vim.notify('fatal: .git does not exist on current directory.', vim.log.levels.ERROR)
+    return
+  end
+
+  -- save editing buffers
+  save_buffers()
+
+  -- fetch file names corresponding to git diff status
+  local diff_file_names = run('git status -uall --porcelain | grep -wv D | cut -b4-')
+  if #diff_file_names <= 0 then
+    vim.notify('fatal: no changed files on .git repository.', vim.log.levels.ERROR)
+    return
+  end
+
+  -- close buffers with some ignoring files
+  close_buffers({
+    ignore_files = diff_file_names,
+  })
 
   -- open git changed files
-  vim.api.nvim_command('args ' .. table.concat(file_names, ' '))
-  vim.notify('opened: ' .. #file_names .. ' file(s)')
+  vim.api.nvim_command('args ' .. table.concat(diff_file_names, ' '))
+  vim.notify('opened: ' .. #diff_file_names .. ' file(s)')
 end
 
 return {
