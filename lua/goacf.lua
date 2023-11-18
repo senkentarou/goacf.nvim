@@ -17,21 +17,10 @@ local function run(command)
   return result
 end
 
-local function exists(path)
-  local f = io.open(path, "r")
-
-  if f ~= nil then
-    io.close(f)
-    return true
-  end
-
-  return false
-end
-
 local function goacf()
   -- check .git repository
-  if not exists('.git') then
-    vim.notify('fatal: .git repository does not exist.', vim.log.levels.ERROR)
+  if vim.fn.empty(vim.fn.glob('.git')) == 1 then
+    vim.notify('fatal: .git does not exist on current directory.', vim.log.levels.ERROR)
     return
   end
 
@@ -45,7 +34,6 @@ local function goacf()
   end
 
   local file_names = run('git status -uall --porcelain | grep -wv D | cut -b4-')
-
   if #file_names <= 0 then
     vim.notify('fatal: no changed files on .git repository.', vim.log.levels.ERROR)
     return
